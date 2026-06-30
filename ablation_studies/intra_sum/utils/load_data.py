@@ -36,7 +36,10 @@ class Load_Data(object):
         self.train_path = params['train_path']
         self.test_path = params['test_path']
         self.potential_pos_path = params['potential_pos_path']
+        self.potential_pos_path = params['potential_pos_path']
+        self.dislike_item_path = params['dislike_path']
         self.test_neg_path = params['test_neg_path']
+        # self.sim_item_path = params['sim_item_path']
         # self.u_neg_path = params['u_neg_path']
         self.overlap_user_num = params['overlap_user_num']
         self.overlap_users = [i for i in range(self.overlap_user_num)]
@@ -76,8 +79,10 @@ class Load_Data(object):
             self.item_review_emb = torch.from_numpy(np.load(f_item))
         with open(self.potential_pos_path,'rb') as f:
             self.potential_pos_dict = pickle.load(f)
-        # with open(self.u_neg_path,'rb') as f:
-        #     self.u_neg_dict = pickle.load(f)
+        with open(self.dislike_item_path,'rb') as f:
+            self.dislike_item_dict = pickle.load(f)
+        # with open(self.sim_item_path,'rb') as f:
+        #     self.sim_item_dict = pickle.load(f)
 
     def split_datasets(self):
         '''
@@ -120,14 +125,22 @@ class Load_Data(object):
             iids.append(pos_i_id)
             categories.append(batch_category[i])
             ratings.append(1)
-            for t in range(self.args.train_neg_num):
-                j = np.random.randint(num_items)
-                while len(self.df_rating[(self.df_rating['userID'] == u_id) & (self.df_rating['itemID'] == j)]) > 0:
-                    j = np.random.randint(num_items)
-                uids.append(u_id)
-                iids.append(j)
-                categories.append(batch_category[i])
-                ratings.append(0)
+            dislike_items = self.dislike_item_dict[int(u_id)]
+            # if len(dislike_items) >= self.args.train_neg_num:
+            j = random.sample(dislike_items, self.args.train_neg_num)
+            uids.append(u_id)
+            iids.extend(j)
+            categories.append(batch_category[i])
+            ratings.append(0)
+
+            # for t in range(self.args.train_neg_num):
+            #     j = np.random.randint(num_items)
+            #     while len(self.df_rating[(self.df_rating['userID'] == u_id) & (self.df_rating['itemID'] == j)]) > 0:
+            #         j = np.random.randint(num_items)
+            #     uids.append(u_id)
+            #     iids.append(j)
+            #     categories.append(batch_category[i])
+            #     ratings.append(0)
         return uids,iids,categories,ratings
 
 

@@ -1,0 +1,31 @@
+2024-05-27 20:23:55.153 | INFO     | __main__:find_potential_positives:46 - 0
+2024-05-27 20:25:21.803 | INFO     | __main__:find_potential_positives:46 - 1000
+2024-05-27 20:26:48.233 | INFO     | __main__:find_potential_positives:46 - 2000
+2024-05-27 20:28:14.778 | INFO     | __main__:find_potential_positives:46 - 3000
+2024-05-27 20:29:41.328 | INFO     | __main__:find_potential_positives:46 - 4000
+2024-05-27 20:31:07.806 | INFO     | __main__:find_potential_positives:46 - 5000
+2024-05-27 20:32:34.441 | INFO     | __main__:find_potential_positives:46 - 6000
+2024-05-27 20:34:00.894 | INFO     | __main__:find_potential_positives:46 - 7000
+2024-05-27 20:35:27.510 | INFO     | __main__:find_potential_positives:46 - 8000
+2024-05-27 20:36:54.122 | INFO     | __main__:find_potential_positives:46 - 9000
+2024-05-27 20:38:20.786 | INFO     | __main__:find_potential_positives:46 - 10000
+2024-05-27 20:39:47.384 | INFO     | __main__:find_potential_positives:46 - 11000
+2024-05-27 20:41:13.802 | INFO     | __main__:find_potential_positives:46 - 12000
+2024-05-27 20:42:40.472 | INFO     | __main__:find_potential_positives:46 - 13000
+2024-05-27 20:44:07.104 | INFO     | __main__:find_potential_positives:46 - 14000
+2024-05-27 20:45:33.683 | INFO     | __main__:find_potential_positives:46 - 15000
+2024-05-27 20:47:00.265 | INFO     | __main__:find_potential_positives:46 - 16000
+2024-05-27 20:48:26.813 | INFO     | __main__:find_potential_positives:46 - 17000
+2024-05-27 20:49:53.541 | INFO     | __main__:find_potential_positives:46 - 18000
+2024-05-27 20:51:20.198 | INFO     | __main__:find_potential_positives:46 - 19000
+2024-05-27 20:52:46.935 | INFO     | __main__:find_potential_positives:46 - 20000
+2024-05-27 20:54:13.464 | INFO     | __main__:find_potential_positives:46 - 21000
+2024-05-27 20:55:40.014 | INFO     | __main__:find_potential_positives:46 - 22000
+2024-05-27 20:57:06.705 | INFO     | __main__:find_potential_positives:46 - 23000
+2024-05-27 20:58:33.489 | INFO     | __main__:find_potential_positives:46 - 24000
+2024-05-27 21:00:00.194 | INFO     | __main__:find_potential_positives:46 - 25000
+start cal sim
+Sparse matrix shape: (16664, 16664)
+Number of non-zero elements: 273970626
+start find potential items
+start save

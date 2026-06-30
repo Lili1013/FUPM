@@ -7,12 +7,10 @@ import numpy as np
 from loguru import logger
 import multiprocessing
 from functools import partial
-from torch.multiprocessing import Process, Manager
+from torch.multiprocessing import Process,Manager
 
-from models.lightgcn import Light_GCN, Light_GCN_1
+from models.lightgcn import Light_GCN,Light_GCN_1
 from models.domain_disen import Domain_Disen
-from models.attention import Attention
-from torch.distributions import Beta
 
 
 class Local_Model(nn.Module):
@@ -20,25 +18,16 @@ class Local_Model(nn.Module):
         super(Local_Model, self).__init__()
         self.user_num = params['user_num']
         self.item_num = params['item_num']
-        self.all_items = set(range(self.item_num))
-
         self.tau = params['tau']
-        self.beta = params['beta']
-        self.local_data = params['local_data']
         self.embed_id_dim = params['embed_id_dim']
-        self.potential_pos_dict = params['potential_pos_dict']
-        # self.u_neg_dict = params['u_neg_dict']
-        # self.user_potential_pos_items_dict = {}
-        # for user_id in range(self.user_num):
-        #     self.user_potential_pos_items_dict[user_id] = set([item for key, items in self.potential_pos_dict.items() if key[0] == user_id for item in items])
-        # self.disen_emb_dim = params['disen_emb_dim']
+        self.disen_emb_dim = params['disen_emb_dim']
         self.device = params['device']
         self.n_layers = params['n_layers']
         self.train_data = params['train_data']
         self.review_embed_dim = params['review_embed_dim']
         self.u_review_feat = params['u_review_feat']
         self.v_review_feat = params['v_review_feat']
-        # self.disen_feat_agg_way = params['disen_feat_agg_way']
+        self.disen_feat_agg_way = params['disen_feat_agg_way']
         self.u_emb = nn.Embedding(self.user_num, self.embed_id_dim).to(self.device)
         nn.init.xavier_uniform_(self.u_emb.weight)
         self.v_emb = nn.Embedding(self.item_num, self.embed_id_dim).to(self.device)
@@ -61,12 +50,12 @@ class Local_Model(nn.Module):
         # }
         # self.light_gcn = Light_GCN_1(**light_gcn_params)
         # # self.u_id_embeddings, self.v_id_embeddings = self.light_gcn.u_g_embeddings, self.light_gcn.v_g_embeddings
-        # disen_params = {
-        #     'orig_emb_size': self.embed_id_dim,
-        #     'disen_emb_size': self.disen_emb_dim,
-        #     'device': self.device
-        # }
-        # self.domain_disen_model = Domain_Disen(**disen_params)
+        disen_params = {
+            'orig_emb_size': self.embed_id_dim,
+            'disen_emb_size': self.disen_emb_dim,
+            'device': self.device
+        }
+        self.domain_disen_model = Domain_Disen(**disen_params)
 
         # # #the aggregation layers for id and review features
         # self.v_feat_cat_layer = nn.Linear(self.embed_id_dim*2, self.embed_id_dim).to(self.device)
@@ -74,218 +63,72 @@ class Local_Model(nn.Module):
         # self.u_feat_cat_layer = nn.Linear(self.embed_id_dim * 2, self.embed_id_dim).to(self.device)
         # self.u_feat_cat_norm = nn.BatchNorm1d(self.embed_id_dim).to(self.device)
 
-        self.att = Attention(self.embed_id_dim)
+        if self.disen_feat_agg_way == 'concat':
+            self.disen_agg_layer = nn.Linear(self.disen_emb_dim*2,self.disen_emb_dim).to(self.device)
+            self.disen_agg_norm = nn.BatchNorm1d(self.disen_emb_dim).to(self.device)
 
-        # if self.disen_feat_agg_way == 'concat':
-        #     self.disen_agg_layer = nn.Linear(self.disen_emb_dim * 2, self.disen_emb_dim).to(self.device)
-        #     self.disen_agg_norm = nn.BatchNorm1d(self.disen_emb_dim).to(self.device)
+        self.v_feat_layer = nn.Linear(self.embed_id_dim,self.disen_emb_dim).to(self.device)
+        self.v_feat_norm = nn.BatchNorm1d(self.disen_emb_dim).to(self.device)
 
-        # self.v_feat_layer = nn.Linear(self.embed_id_dim, self.disen_emb_dim).to(self.device)
-        # self.v_feat_norm = nn.BatchNorm1d(self.disen_emb_dim).to(self.device)
-
-        self.inter_learn_layer1 = nn.Linear(self.embed_id_dim * 2, self.embed_id_dim).to(self.device)
+        self.inter_learn_layer1 = nn.Linear(self.disen_emb_dim*2, self.disen_emb_dim).to(self.device)
         nn.init.xavier_uniform_(self.inter_learn_layer1.weight)
-        self.batch_norm1 = nn.BatchNorm1d(self.embed_id_dim).to(self.device)
-        self.inter_learn_layer2 = nn.Linear(self.embed_id_dim, self.embed_id_dim // 2).to(self.device)
+        self.batch_norm1 = nn.BatchNorm1d(self.disen_emb_dim).to(self.device)
+        self.inter_learn_layer2 = nn.Linear(self.disen_emb_dim, self.disen_emb_dim // 2).to(self.device)
         nn.init.xavier_uniform_(self.inter_learn_layer2.weight)
-        self.batch_norm2 = nn.BatchNorm1d(self.embed_id_dim // 2).to(self.device)
-        self.inter_learn_layer3 = nn.Linear(self.embed_id_dim // 2, self.embed_id_dim // 4).to(self.device)
+        self.batch_norm2 = nn.BatchNorm1d(self.disen_emb_dim//2).to(self.device)
+        self.inter_learn_layer3 = nn.Linear(self.disen_emb_dim//2, self.disen_emb_dim // 4).to(self.device)
         nn.init.xavier_uniform_(self.inter_learn_layer3.weight)
-        self.batch_norm3 = nn.BatchNorm1d(self.embed_id_dim // 4).to(self.device)
-        self.classifier_layer = nn.Linear(self.embed_id_dim // 4, 1).to(self.device)
+        self.batch_norm3 = nn.BatchNorm1d(self.disen_emb_dim // 4).to(self.device)
+        self.classifier_layer = nn.Linear(self.disen_emb_dim // 4, 1).to(self.device)
 
         # loss function
         self.criterion = nn.BCELoss()
-    # def get_potential_item_emb(self,nodes_u,nodes_v):
-    #     pos_item_emb_list = []
-    #     for user_id,item_id in zip(nodes_u.tolist(),nodes_v.tolist()):
-    #         key = (user_id,item_id)
-    #         if key in self.potential_pos_dict and len(self.potential_pos_dict[key]) > 0:
-    #             pos_item_list = self.potential_pos_dict[key]
-    #             pos_item = random.sample(pos_item_list,1)
-    #             pos_item_emb = self.v_emb(torch.tensor(pos_item).to(self.device)).squeeze()
-    #             # pos_item_emb = torch.mean(self.v_emb(torch.tensor(pos_item_list).to(self.device)), dim=0)
-    #         else:
-    #             pos_item_emb = self.v_emb(torch.tensor(item_id).to(self.device))
-    #         pos_item_emb_list.append(pos_item_emb)
-    #     return torch.stack(pos_item_emb_list)
-    def get_potential_item_emb(self, nodes_u, nodes_v):
-        neg_num = 4
-        user_ids = nodes_u.to(self.device)
-        item_ids = nodes_v.to(self.device)
 
-        # batch_size = len(user_ids)
-        # pos_item_emb_list = torch.zeros((batch_size, self.embed_id_dim), device=self.device)
-        pos_item_emb_list = self.v_emb(item_ids)
-
-        # Precompute masks and user interacted items
-        masks = torch.tensor(
-            [(user_id, item_id) in self.potential_pos_dict
-             for user_id, item_id in zip(user_ids.tolist(), item_ids.tolist())], dtype=torch.bool, device=self.device)
-
-        # user_interacted_items_dict = {user_id.item(): set(self.local_data.user_inter_dict[user_id.item()]) for user_id
-        #                               in user_ids.unique()}
-
-        # Handle cases where potential_pos_dict contains the (user_id, item_id) key
-        if masks.any():
-            indices = masks.nonzero(as_tuple=True)[0]
-            pos_item_lists = [
-                random.sample(self.potential_pos_dict[(user_ids[idx].item(), item_ids[idx].item())], neg_num) if len(
-                    self.potential_pos_dict[(user_ids[idx].item(), item_ids[idx].item())]) >= neg_num
-                else self.potential_pos_dict[(user_ids[idx].item(), item_ids[idx].item())] if len(
-                    self.potential_pos_dict[(user_ids[idx].item(), item_ids[idx].item())]) > 0
-                else [item_ids[idx].item()] for idx in indices.tolist()]
-            pos_item_embs = torch.stack(
-                [torch.mean(self.v_emb(torch.tensor(items, device=self.device)), dim=0) for items in pos_item_lists])
-            pos_item_emb_list[indices] = pos_item_embs
-
-        # Handle cases where potential_pos_dict does not contain the (user_id, item_id) key
-        if (~masks).any():
-            indices = (~masks).nonzero(as_tuple=True)[0]
-            non_inter_items_list = [
-                random.sample(list(self.all_items - set(self.local_data.user_inter_dict[user_ids[idx].item()])),
-                              neg_num)
-                if len(self.all_items - set(self.local_data.user_inter_dict[user_ids[idx].item()])) >= neg_num
-                else list(self.all_items - set(self.local_data.user_inter_dict[user_ids[idx].item()]))
-                for idx in indices.tolist()]
-            non_inter_item_embs = torch.stack(
-                [torch.mean(self.v_emb(torch.tensor(items, device=self.device)), dim=0) for items in
-                 non_inter_items_list])
-            pos_item_emb_list[indices] = non_inter_item_embs
-
-        return pos_item_emb_list
-    def get_potential_item_emb_orig(self, nodes_u, nodes_v):
-        neg_num = 4
-        user_ids = nodes_u.to(self.device)
-        item_ids = nodes_v.to(self.device)
-
-        # batch_size = len(user_ids)
-        # pos_item_emb_list = torch.zeros((batch_size, self.embed_id_dim), device=self.device)
-        pos_item_emb_list = self.v_emb(item_ids)
-
-        # Precompute masks and user interacted items
-        masks = torch.tensor(
-            [(user_id, item_id) in self.potential_pos_dict and len(self.potential_pos_dict[(user_id, item_id)]) > 0
-             for user_id, item_id in zip(user_ids.tolist(), item_ids.tolist())], dtype=torch.bool, device=self.device)
-
-        user_interacted_items_dict = {user_id.item(): set(self.local_data.user_inter_dict[user_id.item()]) for user_id
-                                      in user_ids.unique()}
-
-        # Handle cases where potential_pos_dict contains the (user_id, item_id) key
-        if masks.any():
-            indices = masks.nonzero(as_tuple=True)[0]
-            pos_item_lists = [random.sample(self.potential_pos_dict[(user_ids[idx].item(), item_ids[idx].item())], neg_num) if len(self.potential_pos_dict[(user_ids[idx].item(), item_ids[idx].item())]) >= neg_num
-                              else self.potential_pos_dict[(user_ids[idx].item(), item_ids[idx].item())]
-                              for idx in indices.tolist()]
-            pos_item_embs = torch.stack(
-                [torch.mean(self.v_emb(torch.tensor(items, device=self.device)), dim=0) for items in pos_item_lists])
-            pos_item_emb_list[indices] = pos_item_embs
-
-        # Handle cases where potential_pos_dict does not contain the (user_id, item_id) key
-        if (~masks).any():
-            indices = (~masks).nonzero(as_tuple=True)[0]
-            non_inter_items_list = [
-                random.sample(list(self.all_items - user_interacted_items_dict[user_ids[idx].item()]), neg_num)
-                if len(self.all_items - user_interacted_items_dict[user_ids[idx].item()]) >= neg_num
-                else list(self.all_items - user_interacted_items_dict[user_ids[idx].item()])
-                for idx in indices.tolist()]
-            non_inter_item_embs = torch.stack(
-                [torch.mean(self.v_emb(torch.tensor(items, device=self.device)), dim=0) for items in
-                 non_inter_items_list])
-            pos_item_emb_list[indices] = non_inter_item_embs
-
-        return pos_item_emb_list
-
-    def forward(self, nodes_u, nodes_v,global_protos,inter_nums):
+    def forward(self, nodes_u, nodes_v):
         # self.u_id_embeddings,self.v_id_embeddings = self.light_gcn.get_user_item_id_emb(self.u_emb,self.v_emb)
         # u_id_feats = self.u_id_embeddings[nodes_u]
         # v_id_feats = self.v_id_embeddings[nodes_v]
-        # self.u_rev_embeddings, self.v_rev_embeddings = self.light_gcn.get_user_item_id_emb(self.u_review_feat_emb,
-        #                                                                                    self.v_review_feat_emb)
-        # u_review_feats = self.u_rev_embeddings[nodes_u]
-        # v_review_feats = self.v_rev_embeddings[nodes_v]
-        # batch_inter_nums = [inter_nums[x] for x in nodes_u.tolist()]
+
         u_id_feats = self.u_emb(nodes_u)
         v_id_feats = self.v_emb(nodes_v)
         u_review_feats = self.u_review_feat_emb(nodes_u)
         v_review_feats = self.v_review_feat_emb(nodes_v)
-        potential_item_id_feats = self.get_potential_item_emb_orig(nodes_u,nodes_v)
-        # score_1 = torch.sum(v_id_feats*v_id_feats,dim=1)
-        # score_2 = torch.sum(v_id_feats*potential_item_id_feats,dim=1)
-        # scores = torch.stack([score_1,score_2],dim=1)
-        # att_weights = F.softmax(scores,dim=1)
-        # v_id_embs = torch.stack([v_id_feats,potential_item_id_feats],dim=1)
-        # att_weights = att_weights.unsqueeze(2)
-        # v_id_feats = torch.sum(att_weights*v_id_embs,dim=1)
+        # u_feats = torch.cat([u_id_feats,u_review_feats],dim=1)
+        # v_feats = torch.cat([v_id_feats,v_review_feats],dim=1)
+        # u_feats = self.u_feat_cat_norm(F.relu(self.u_feat_cat_layer(u_feats)))
+        # v_feats = self.v_feat_cat_norm(F.relu(self.v_feat_cat_layer(v_feats)))
+        u_feats = u_id_feats
+        v_feats = v_id_feats
+        # u_common_feats, u_specific_feats = self.domain_disen_model.forward(u_feats)
+        # v_feats = self.v_feat_norm(F.relu(self.v_feat_layer(v_feats)))
+        # agg way: sum
+        # if self.disen_feat_agg_way == 'sum':
+        #     u_feats = u_common_feats + u_specific_feats
+        # elif self.disen_feat_agg_way == 'avg':
+        #     u_feats = (u_common_feats+u_specific_feats)/2
+        # elif self.disen_feat_agg_way == 'concat':
+        #     u_feats = self.disen_agg_norm(F.relu(self.disen_agg_layer(torch.cat([u_common_feats,u_specific_feats],dim=1))))
 
-        # # 计算 element-wise product
-        # element_wise_product = v_id_feats * potential_item_id_feats
-        #
-        # # 计算用户的 attention scores (s_u)
-        # attention_scores_1 = torch.sum(element_wise_product, dim=1, keepdim=True)
-        #
-        # # # 计算物品的 attention scores (s_i)
-        # # attention_scores_2 = torch.sum(element_wise_product, dim=0, keepdim=True)
-        #
-        # # 计算用户的 normalized scores (α_u)
-        # attention_weights_1 = F.softmax(attention_scores_1, dim=0)
-        #
-        # # # 计算物品的 normalized scores (α_i)
-        # # attention_weights_2 = F.softmax(attention_scores_2, dim=1)
-        #
-        # # 将 attention weights 扩展以与原始 embedding 的维度匹配
-        # attention_weights_expanded_1 = attention_weights_1.expand_as(v_id_feats)
-        # # attention_weights_expanded_2 = attention_weights_2.expand_as(potential_item_id_feats)
-        #
-        # # # 计算融合的 embedding
-        # # fused_embedding_1 = torch.sum(attention_weights_expanded_1 * v_id_feats, dim=0)
-        # # fused_embedding_2 = torch.sum(attention_weights_expanded_2 * potential_item_id_feats, dim=1)
-        #
-        # # 最终的融合 embedding
-        # v_id_feats = attention_weights_expanded_1*potential_item_id_feats + (1-attention_weights_expanded_1)*v_id_feats
-        # # v_id_feats = (v_id_feats+potential_item_id_feats)/2
-        
-        #beta distribution
-        # beta_distribution = Beta(torch.tensor([self.beta]),torch.tensor([self.beta]))
-        # delta = beta_distribution.sample().item()
-        #uniform distribution
-        # delta = torch.rand(len(nodes_u),1,device=self.device)
-        #gaussian distribution
-        delta = torch.normal(mean=0.5,std=0.1,size=(len(nodes_u),self.embed_id_dim),device=self.device)
-        delta = torch.clamp(delta,0,1)
-        v_id_feats = delta*v_id_feats+(1-delta)*potential_item_id_feats
-        
-        
-        proto_feats = torch.tensor([global_protos[label] for label in nodes_u.tolist()])
-        proto_feats = proto_feats.to(torch.float32).to(self.device)
-        # att_w = self.att(u_id_feats,proto_feats)
-        # weight_user_emb = torch.bmm(att_w.unsqueeze(2), proto_feats.unsqueeze(1))
-        # u_feats = weight_user_emb.squeeze(1)
-        u_feats = proto_feats
-
-        # w_user_id_feats = torch.tensor([x/(x+1) for x in batch_inter_nums]).to(self.device)
-        # w_proto_feats = torch.tensor([1/(x+1) for x in batch_inter_nums]).to(self.device)
-        # u_feats = (u_id_feats*w_user_id_feats.unsqueeze(1)+proto_feats*w_proto_feats.unsqueeze(1))/2+weight_user_emb.squeeze(1)/2
-        inter_feats = torch.cat([u_id_feats, v_id_feats], dim=1)
+        inter_feats = torch.cat([u_feats, v_feats], dim=1)
         inter_feats1 = self.batch_norm1(F.relu(self.inter_learn_layer1(inter_feats)))
         inter_feats2 = self.batch_norm2(F.relu(self.inter_learn_layer2(inter_feats1)))
         inter_feats3 = self.batch_norm3(F.relu(self.inter_learn_layer3(inter_feats2)))
         pred_prob = F.sigmoid(self.classifier_layer(inter_feats3))
-        return u_feats, pred_prob.squeeze(), u_id_feats, v_id_feats, u_review_feats, v_review_feats,potential_item_id_feats
+        return v_feats, pred_prob.squeeze(),u_id_feats,v_id_feats,u_review_feats,v_review_feats
 
     def cross_entropy_loss(self, pred_labels, true_labels):
         L_ce = self.criterion(pred_labels, true_labels.to(torch.float32))
         return L_ce
 
-    def calc_ssl_loss_intra(self, u_id_feats, v_id_feats,u_review_feats, v_review_feats):
-        norm_u_id_feats = F.normalize(u_id_feats, p=2, dim=1)
-        norm_u_rev_feats = F.normalize(u_review_feats, p=2, dim=1)
-        norm_all_u_rev_feats = F.normalize(self.u_review_feat_emb.weight, p=2, dim=1)
-        pos_score_user = (norm_u_id_feats * norm_u_rev_feats).sum(dim=1)
-        ttl_score_user = torch.matmul(norm_u_id_feats, norm_all_u_rev_feats.T)
-        pos_score_user = torch.exp(pos_score_user / self.tau)
-        ttl_score_user = torch.sum(torch.exp(ttl_score_user / self.tau), dim=1)
-        ssl_loss_user = -torch.sum(torch.log(pos_score_user / ttl_score_user))
+    def calc_ssl_loss_intra(self, u_id_feats,v_id_feats,u_review_feats,v_review_feats):
+        norm_u_id_feats = F.normalize(u_id_feats,p=2,dim=1)
+        norm_u_rev_feats = F.normalize(u_review_feats,p=2,dim=1)
+        norm_all_u_rev_feats = F.normalize(self.u_review_feat_emb.weight,p=2,dim=1)
+        pos_score_user = (norm_u_id_feats*norm_u_rev_feats).sum(dim=1)
+        ttl_score_user = torch.matmul(norm_u_id_feats,norm_all_u_rev_feats.T)
+        pos_score_user = torch.exp(pos_score_user/self.tau)
+        ttl_score_user = torch.sum(torch.exp(ttl_score_user/self.tau),dim=1)
+        ssl_loss_user = -torch.sum(torch.log(pos_score_user/ttl_score_user))
 
         norm_v_id_feats = F.normalize(v_id_feats, p=2, dim=1)
         norm_v_rev_feats = F.normalize(v_review_feats, p=2, dim=1)
@@ -295,37 +138,295 @@ class Local_Model(nn.Module):
         pos_score_item = torch.exp(pos_score_item / self.tau)
         ttl_score_item = torch.sum(torch.exp(ttl_score_item / self.tau), dim=1)
         ssl_loss_item = -torch.sum(torch.log(pos_score_item / ttl_score_item))
-
+        return (ssl_loss_user+ssl_loss_item)
         
-        return (ssl_loss_user + ssl_loss_item)
 
-    def calc_ssl_loss_intra_item(self, v_id_feats, potential_item_id_feats):
-        norm_v_id_feats = F.normalize(v_id_feats, p=2, dim=1)
-        norm_potential_item_id_feats = F.normalize(potential_item_id_feats,p=2,dim=1)
-        rows, cols = v_id_feats.size()
-        random_indices = torch.randperm(rows)
-        norm_all_potential_item_id_feats = potential_item_id_feats[random_indices]
-        norm_all_potential_item_id_feats = F.normalize(norm_all_potential_item_id_feats, p=2, dim=1)
-        pos_score_item = (norm_v_id_feats * norm_potential_item_id_feats).sum(dim=1)
-        ttl_score_item = torch.matmul(norm_v_id_feats, norm_all_potential_item_id_feats.T)
-        pos_score_item = torch.exp(pos_score_item / self.tau)
-        ttl_score_item = torch.sum(torch.exp(ttl_score_item / self.tau), dim=1)
-        ssl_loss_item = -torch.sum(torch.log(pos_score_item / ttl_score_item))
+    def info_nce_loss(self, anchor, positive, negatives, temperature=1.0):
+        # Calculate cosine similarity between anchor and positive
+        cos_sim = F.cosine_similarity(anchor, positive, dim=1)
 
-        return ssl_loss_item
-    def calc_ssl_loss_proto(self, u_id_feats, u_feats):
-        norm_u_id_feats = F.normalize(u_id_feats, p=2, dim=1)
-        norm_u_proto_feats = F.normalize(u_feats, p=2, dim=1)
-        rows,cols = u_id_feats.size()
-        random_indices = torch.randperm(rows)
-        norm_all_u_proto_feats = u_feats[random_indices]
-        norm_all_u_proto_feats = F.normalize(norm_all_u_proto_feats, p=2, dim=1)
-        pos_score_user = (norm_u_id_feats * norm_u_proto_feats).sum(dim=1)
-        ttl_score_user = torch.matmul(norm_u_id_feats, norm_all_u_proto_feats.T)
-        pos_score_user = torch.exp(pos_score_user / self.tau)
-        ttl_score_user = torch.sum(torch.exp(ttl_score_user / self.tau), dim=1)
-        ssl_loss_user = -torch.sum(torch.log(pos_score_user / ttl_score_user))
+        # Calculate cosine similarity between anchor and negatives
+        cos_sim_neg = F.cosine_similarity(anchor.unsqueeze(1).expand_as(negatives), negatives, dim=2)
 
-        return ssl_loss_user
+        # Concatenate positive and negative similarities
+        logits = torch.cat([cos_sim.unsqueeze(1), cos_sim_neg], dim=1)
+
+        # Apply temperature to the logits
+        logits /= temperature
+
+        # Calculate softmax probabilities
+        probs = F.softmax(logits, dim=1)
+
+        # InfoNCE loss
+        info_nce_loss = -torch.log(probs[:, 0]).mean()
+
+        return info_nce_loss, probs
+
+
+    def proto_loss(self, P, overlap_user_protos, client,train_df,nodes_u, category_lists, u_feats, cat_labels,client_num):
+        if client_num == 3:
+            L_P,L_C = self.proto_loss_multiple_sample_neg(P,overlap_user_protos, train_df,nodes_u, category_lists, u_feats, cat_labels)
+        else:
+            # L_C = self.proto_loss_dual_sample_neg(P,overlap_user_protos, train_df,nodes_u, category_lists, u_feats, cat_labels)
+            L_C = 0
+        return L_C
+
+    def proto_loss_multiple(self,P,overlap_user_protos, train_df,nodes_u, category_lists, u_feats, cat_labels):
+        batch_size = len(nodes_u)
+        c_pos_features = torch.zeros_like(u_feats).to(self.device)  # (256,32)
+        c_neg_features_lists = []
+        p_pos_features_1 = torch.zeros_like(u_feats).to(self.device)
+        p_pos_features_2 = torch.zeros_like(u_feats).to(self.device)
+        p_pos_features_3 = torch.zeros_like(u_feats).to(self.device)
+        p_neg_features_lists = []
+        cat_num = len(cat_labels)
+        cat_lists = list(cat_labels)
+        for i in range((cat_num - 1) * 3):
+            if i < cat_num - 1:
+                c_neg_features_lists.append(torch.zeros_like(u_feats).to(self.device))
+                p_neg_features_lists.append(torch.zeros_like(u_feats).to(self.device))
+            else:
+                p_neg_features_lists.append(torch.zeros_like(u_feats).to(self.device))
+
+        for i in range(batch_size):
+            u = int(nodes_u[i])
+
+            if u < len(overlap_user_protos):
+                c_pos_features[i, :] = torch.tensor(overlap_user_protos[int(u)][1]).to(self.device)
+                p_pos_features_1[i, :] = torch.tensor(overlap_user_protos[int(u)][0][0]).to(self.device)
+                p_pos_features_2[i, :] = torch.tensor(overlap_user_protos[int(u)][0][1]).to(self.device)
+                p_pos_features_3[i, :] = torch.tensor(overlap_user_protos[int(u)][0][2]).to(self.device)
+            else:
+                u_cat = train_df[train_df['userID'] == u]['category'].values[0]
+                proto_pos = P[u_cat][0]
+                c_pos_features[i, :] = torch.tensor(proto_pos).to(self.device)
+                p_pos_features_1[i, :] = torch.tensor(proto_pos).to(self.device)
+                p_pos_features_2[i, :] = torch.tensor(proto_pos).to(self.device)
+                p_pos_features_3[i, :] = torch.tensor(proto_pos).to(self.device)
+            cat_lists_temp = cat_lists
+            cat_filter_lists = list(set(cat_lists_temp) - set([int(category_lists[i])]))
+            for j in range(len(c_neg_features_lists)):
+                neg_cat = cat_filter_lists[0]
+                c_neg_features_lists[j][i, :] = torch.tensor(P[neg_cat][0]).to(self.device)
+                p_neg_features_lists[j][i, :] = torch.tensor(P[neg_cat][0]).to(self.device)
+
+                p_neg_features_lists[j + cat_num - 1][i, :] = torch.tensor(P[neg_cat][0]).to(self.device)
+                p_neg_features_lists[j + (cat_num - 1) * 2][i, :] = torch.tensor(P[neg_cat][0]).to(self.device)
+                cat_filter_lists = [item for item in cat_filter_lists if item != neg_cat]
+        negatives_p = torch.stack(p_neg_features_lists, dim=1)
+        negatives_c = torch.stack(c_neg_features_lists, dim=1)
+        # calculate L_P
+        L_C, prob_c = self.info_nce_loss(anchor=u_feats, positive=c_pos_features, negatives=negatives_c,
+                                         temperature=self.tau)
+        _, prob_p_1 = self.info_nce_loss(anchor=u_feats, positive=p_pos_features_1, negatives=negatives_p,
+                                         temperature=self.tau)
+        _, prob_p_2 = self.info_nce_loss(anchor=u_feats, positive=p_pos_features_2, negatives=negatives_p,
+                                         temperature=self.tau)
+        _, prob_p_3 = self.info_nce_loss(anchor=u_feats, positive=p_pos_features_2, negatives=negatives_p,
+                                         temperature=self.tau)
+        L_P = -torch.log(prob_p_1[:, 0] + prob_p_2[:, 0] + prob_p_3[:, 0]).mean()
+        return L_P,L_C
+
+    def proto_loss_dual(self,P,overlap_user_protos, train_df,nodes_u, category_lists, u_feats, cat_labels):
+        batch_size = len(nodes_u)
+        c_pos_features = torch.zeros_like(u_feats).to(self.device)  # (256,32)
+        c_neg_features_lists = []
+        p_pos_features_1 = torch.zeros_like(u_feats).to(self.device)
+        p_pos_features_2 = torch.zeros_like(u_feats).to(self.device)
+        p_neg_features_lists = []
+        cat_num = len(cat_labels)
+        cat_lists = list(cat_labels)
+        for i in range((cat_num - 1) * 2):
+            if i < cat_num - 1:
+                c_neg_features_lists.append(torch.zeros_like(u_feats).to(self.device))
+                p_neg_features_lists.append(torch.zeros_like(u_feats).to(self.device))
+            else:
+                p_neg_features_lists.append(torch.zeros_like(u_feats).to(self.device))
+        for i in range(batch_size):
+            u = int(nodes_u[i])
+
+            if u < len(overlap_user_protos):
+                c_pos_features[i, :] = torch.tensor(overlap_user_protos[int(u)][1]).to(self.device)
+                p_pos_features_1[i, :] = torch.tensor(overlap_user_protos[int(u)][0][0]).to(self.device)
+                p_pos_features_2[i, :] = torch.tensor(overlap_user_protos[int(u)][0][1]).to(self.device)
+            else:
+                u_cat = train_df[train_df['userID'] == u]['category'].values[0]
+                proto_pos = P[u_cat][0]
+                c_pos_features[i, :] = torch.tensor(proto_pos).to(self.device)
+                p_pos_features_1[i, :] = torch.tensor(proto_pos).to(self.device)
+                p_pos_features_2[i, :] = torch.tensor(proto_pos).to(self.device)
+            cat_lists_temp = cat_lists
+            cat_filter_lists = list(set(cat_lists_temp) - set([int(category_lists[i])]))
+            for j in range(len(c_neg_features_lists)):
+                neg_cat = cat_filter_lists[0]
+                c_neg_features_lists[j][i, :] = torch.tensor(P[neg_cat][0]).to(self.device)
+                p_neg_features_lists[j][i, :] = torch.tensor(P[neg_cat][0]).to(self.device)
+                p_neg_features_lists[j + cat_num - 1][i, :] = torch.tensor(P[neg_cat][0]).to(self.device)
+                cat_filter_lists = [item for item in cat_filter_lists if item != neg_cat]
+        negatives_p = torch.stack(p_neg_features_lists, dim=1)
+        negatives_c = torch.stack(c_neg_features_lists, dim=1)
+        # calculate L_P
+        L_C, prob_c = self.info_nce_loss(anchor=u_feats, positive=c_pos_features, negatives=negatives_c,
+                                         temperature=self.tau)
+        _, prob_p_1 = self.info_nce_loss(anchor=u_feats, positive=p_pos_features_1, negatives=negatives_p,
+                                         temperature=self.tau)
+        _, prob_p_2 = self.info_nce_loss(anchor=u_feats, positive=p_pos_features_2, negatives=negatives_p,
+                                         temperature=self.tau)
+        L_P = -torch.log(prob_p_1[:, 0] + prob_p_2[:, 0]).mean()
+        return L_P,L_C
+
+
+    def disc_loss(self, x, y, kernel="rbf"):
+        """Emprical maximum mean discrepancy. The lower the result
+         the more evidence that distributions are the same.
+
+        Args:
+            x: first sample, distribution P
+            y: second sample, distribution Q
+            kernel: kernel type such as "multiscale" or "rbf"
+        """
+        xx, yy, zz = torch.mm(x, x.t()), torch.mm(y, y.t()), torch.mm(x, y.t())
+        rx = (xx.diag().unsqueeze(0).expand_as(xx))
+        ry = (yy.diag().unsqueeze(0).expand_as(yy))
+
+        dxx = rx.t() + rx - 2. * xx  # Used for A in (1)
+        dyy = ry.t() + ry - 2. * yy  # Used for B in (1)
+        dxy = rx.t() + ry - 2. * zz  # Used for C in (1)
+
+        XX, YY, XY = (torch.zeros(xx.shape).to(self.device),
+                      torch.zeros(xx.shape).to(self.device),
+                      torch.zeros(xx.shape).to(self.device))
+        '''
+        XX, YY, XY = (torch.zeros(xx.shape),
+                      torch.zeros(xx.shape),
+                      torch.zeros(xx.shape))
+        '''
+
+        if kernel == "multiscale":
+            bandwidth_range = [0.2, 0.5, 0.9, 1.3]
+            for a in bandwidth_range:
+                XX += a ** 2 * (a ** 2 + dxx) ** -1
+                YY += a ** 2 * (a ** 2 + dyy) ** -1
+                XY += a ** 2 * (a ** 2 + dxy) ** -1
+        elif kernel == "rbf":
+            bandwidth_range = [10, 15, 20, 50]
+            for a in bandwidth_range:
+                XX += torch.exp(-0.5 * dxx / a)
+                YY += torch.exp(-0.5 * dyy / a)
+                XY += torch.exp(-0.5 * dxy / a)
+        return -torch.mean(XX + YY - 2. * XY)
+
+    def proto_loss_multiple_sample_neg(self, P, overlap_user_protos, train_df, nodes_u, category_lists, u_feats, cat_labels):
+        sample_neg = 4
+        batch_size = len(nodes_u)
+        c_pos_features = torch.zeros_like(u_feats).to(self.device)  # (256,32)
+        c_neg_features_lists = []
+        p_pos_features_1 = torch.zeros_like(u_feats).to(self.device)
+        p_pos_features_2 = torch.zeros_like(u_feats).to(self.device)
+        p_pos_features_3 = torch.zeros_like(u_feats).to(self.device)
+        p_neg_features_lists = []
+        cat_num = len(cat_labels)
+        cat_lists = list(cat_labels)
+        for i in range(sample_neg * 3):
+            if i < sample_neg:
+                c_neg_features_lists.append(torch.zeros_like(u_feats).to(self.device))
+                p_neg_features_lists.append(torch.zeros_like(u_feats).to(self.device))
+            else:
+                p_neg_features_lists.append(torch.zeros_like(u_feats).to(self.device))
+
+        for i in range(batch_size):
+            u = int(nodes_u[i])
+
+            if u < len(overlap_user_protos):
+                c_pos_features[i, :] = torch.tensor(overlap_user_protos[int(u)][1]).to(self.device)
+                p_pos_features_1[i, :] = torch.tensor(overlap_user_protos[int(u)][0][0]).to(self.device)
+                p_pos_features_2[i, :] = torch.tensor(overlap_user_protos[int(u)][0][1]).to(self.device)
+                p_pos_features_3[i, :] = torch.tensor(overlap_user_protos[int(u)][0][2]).to(self.device)
+            else:
+                u_cat = train_df[train_df['userID'] == u]['category'].values[0]
+                proto_pos = P[u_cat][0]
+                c_pos_features[i, :] = torch.tensor(proto_pos).to(self.device)
+                p_pos_features_1[i, :] = torch.tensor(proto_pos).to(self.device)
+                p_pos_features_2[i, :] = torch.tensor(proto_pos).to(self.device)
+                p_pos_features_3[i, :] = torch.tensor(proto_pos).to(self.device)
+            cat_lists_temp = cat_lists
+            cat_filter_lists = list(set(cat_lists_temp) - set([int(category_lists[i])]))
+            cat_filter_lists = random.sample(cat_filter_lists,k=sample_neg)
+            for j in range(len(c_neg_features_lists)):
+                neg_cat = cat_filter_lists[0]
+                c_neg_features_lists[j][i, :] = torch.tensor(P[neg_cat][0]).to(self.device)
+                p_neg_features_lists[j][i, :] = torch.tensor(P[neg_cat][0]).to(self.device)
+
+                p_neg_features_lists[j + sample_neg][i, :] = torch.tensor(P[neg_cat][0]).to(self.device)
+                p_neg_features_lists[j + sample_neg * 2][i, :] = torch.tensor(P[neg_cat][0]).to(self.device)
+                cat_filter_lists = [item for item in cat_filter_lists if item != neg_cat]
+        negatives_p = torch.stack(p_neg_features_lists, dim=1)
+        negatives_c = torch.stack(c_neg_features_lists, dim=1)
+        # calculate L_P
+        L_C, prob_c = self.info_nce_loss(anchor=u_feats, positive=c_pos_features, negatives=negatives_c,
+                                         temperature=self.tau)
+        _, prob_p_1 = self.info_nce_loss(anchor=u_feats, positive=p_pos_features_1, negatives=negatives_p,
+                                         temperature=self.tau)
+        _, prob_p_2 = self.info_nce_loss(anchor=u_feats, positive=p_pos_features_2, negatives=negatives_p,
+                                         temperature=self.tau)
+        _, prob_p_3 = self.info_nce_loss(anchor=u_feats, positive=p_pos_features_2, negatives=negatives_p,
+                                         temperature=self.tau)
+        L_P = -torch.log(prob_p_1[:, 0] + prob_p_2[:, 0] + prob_p_3[:, 0]).mean()
+        return L_P, L_C
+    def proto_loss_dual_sample_neg(self, P, overlap_user_protos, train_df, nodes_u, category_lists, u_feats, cat_labels):
+        sample_neg = 4
+        batch_size = len(nodes_u)
+        c_pos_features = torch.zeros_like(u_feats).to(self.device)  # (256,32)
+        c_neg_features_lists = []
+        # p_pos_features_1 = torch.zeros_like(u_feats).to(self.device)
+        # p_pos_features_2 = torch.zeros_like(u_feats).to(self.device)
+        # p_neg_features_lists = []
+        cat_num = len(cat_labels)
+        cat_lists = list(cat_labels)
+        for i in range(sample_neg * 2):
+            if i < sample_neg:
+                c_neg_features_lists.append(torch.zeros_like(u_feats).to(self.device))
+            #     p_neg_features_lists.append(torch.zeros_like(u_feats).to(self.device))
+            # else:
+            #     p_neg_features_lists.append(torch.zeros_like(u_feats).to(self.device))
+
+        for i in range(batch_size):
+            u = int(nodes_u[i])
+
+            if u < len(overlap_user_protos):
+                c_pos_features[i, :] = torch.tensor(overlap_user_protos[int(u)][1]).to(self.device)
+                # p_pos_features_1[i, :] = torch.tensor(overlap_user_protos[int(u)][0][0]).to(self.device)
+                # p_pos_features_2[i, :] = torch.tensor(overlap_user_protos[int(u)][0][1]).to(self.device)
+            else:
+                u_cat = train_df[train_df['userID'] == u]['category'].values[0]
+                proto_pos = P[u_cat][0]
+                c_pos_features[i, :] = torch.tensor(proto_pos).to(self.device)
+                # p_pos_features_1[i, :] = torch.tensor(proto_pos).to(self.device)
+                # p_pos_features_2[i, :] = torch.tensor(proto_pos).to(self.device)
+
+            cat_lists_temp = cat_lists
+            cat_filter_lists = list(set(cat_lists_temp) - set([int(category_lists[i])]))
+            cat_filter_lists = random.sample(cat_filter_lists,k=sample_neg)
+            for j in range(len(c_neg_features_lists)):
+                neg_cat = cat_filter_lists[0]
+                c_neg_features_lists[j][i, :] = torch.tensor(P[neg_cat][0]).to(self.device)
+                # p_neg_features_lists[j][i, :] = torch.tensor(P[neg_cat][0]).to(self.device)
+                # p_neg_features_lists[j + sample_neg][i, :] = torch.tensor(P[neg_cat][0]).to(self.device)
+                cat_filter_lists = [item for item in cat_filter_lists if item != neg_cat]
+        # negatives_p = torch.stack(p_neg_features_lists, dim=1)
+        negatives_c = torch.stack(c_neg_features_lists, dim=1)
+        # calculate L_P
+        L_C, prob_c = self.info_nce_loss(anchor=u_feats, positive=c_pos_features, negatives=negatives_c,
+                                         temperature=self.tau)
+        # _, prob_p_1 = self.info_nce_loss(anchor=u_feats, positive=p_pos_features_1, negatives=negatives_p,
+        #                                  temperature=self.tau)
+        # _, prob_p_2 = self.info_nce_loss(anchor=u_feats, positive=p_pos_features_2, negatives=negatives_p,
+        #                                  temperature=self.tau)
+        # _, prob_p_3 = self.info_nce_loss(anchor=u_feats, positive=p_pos_features_2, negatives=negatives_p,
+        #                                  temperature=self.tau)
+        # L_P = -torch.log(prob_p_1[:, 0] + prob_p_2[:, 0] + prob_p_3[:, 0]).mean()
+        return L_C
+
+
 
 

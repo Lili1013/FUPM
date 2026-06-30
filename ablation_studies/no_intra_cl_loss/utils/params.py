@@ -8,9 +8,10 @@ data_params = {
         'item_rev_emb_path': '/data/lwang9/CDR_data_process/data_process_FedPCL_MDR_imp_common_user/datasets/douban_book_movie_music/book/book_item_doc_emb_sbert.npy',
         'train_path': '../../../../datasets/douban_book_movie_music/book/train.csv',
         'test_path': '../../../../datasets/douban_book_movie_music/book/test.csv',
-        'test_neg_path':'../../../../datasets/douban_book_movie_music/book/test.txt',
+        'test_neg_path':'../../../../datasets/douban_book_movie_music/book/test_1.txt',
         'overlap_user_num': 901,
         'potential_pos_path':'../../../../datasets/douban_book_movie_music/book/user_pos_items_doc_emb_sbert_0.5.pkl',
+        'dislike_path':'../../../../datasets/douban_book_movie_music/book/user_dislike_items.pkl',
         'u_neg_path':'../../../../datasets/douban_book_movie_music/book/user_neg_items_doc_emb_sbert_0.6.pkl'
     },
     'douban_book_movie_music_movie':{
@@ -20,8 +21,9 @@ data_params = {
         'overlap_user_num': 901,
         'train_path': '../../../../datasets/douban_book_movie_music/movie/train.csv',
         'test_path': '../../../../datasets/douban_book_movie_music/movie/test.csv',
-        'test_neg_path':'../../../../datasets/douban_book_movie_music/movie/test.txt',
+        'test_neg_path':'../../../../datasets/douban_book_movie_music/movie/test_1.txt',
         'potential_pos_path':'../../../../datasets/douban_book_movie_music/movie/user_pos_items_doc_emb_sbert_0.5.pkl',
+        'dislike_path':'../../../../datasets/douban_book_movie_music/movie/user_dislike_items.pkl',
         'u_neg_path':'../../../../datasets/douban_book_movie_music/movie/user_neg_items_doc_emb_sbert_0.6.pkl'
     },
     'douban_book_movie_music_music':{
@@ -31,42 +33,10 @@ data_params = {
         'overlap_user_num': 901,
         'train_path': '../../../../datasets/douban_book_movie_music/music/train.csv',
         'test_path': '../../../../datasets/douban_book_movie_music/music/test.csv',
-        'test_neg_path':'../../../../datasets/douban_book_movie_music/music/test.txt',
+        'test_neg_path':'../../../../datasets/douban_book_movie_music/music/test_1.txt',
         'potential_pos_path':'../../../../datasets/douban_book_movie_music/music/user_pos_items_doc_emb_sbert_0.5.pkl',
+        'dislike_path':'../../../../datasets/douban_book_movie_music/music/user_dislike_items.pkl',
         'u_neg_path':'../../../../datasets/douban_book_movie_music/music/user_neg_items_doc_emb_sbert_0.6.pkl'
-    },
-    'amazon_book_movie_music_book': {
-        'rating_path': '/data/lwang9/CDR_data_process/data_process_FedPCL_MDR_imp_common_user/datasets/amazon_book_movie_music/book/book_inter.csv',
-        'user_rev_emb_path': '/data/lwang9/CDR_data_process/data_process_FedPCL_MDR_imp_common_user/datasets/amazon_book_movie_music/book/book_user_doc_emb_256.npy',
-        'item_rev_emb_path': '/data/lwang9/CDR_data_process/data_process_FedPCL_MDR_imp_common_user/datasets/amazon_book_movie_music/book/book_item_doc_emb_256.npy',
-        'overlap_user_num': 9126,
-        'train_path': '../../../datasets/amazon_book_movie_music/book/train.csv',
-        'test_path': '../../../datasets/amazon_book_movie_music/book/test.csv',
-        'potential_pos_path': '../../../datasets/amazon_book_movie_music/book/user_pos_items_doc_emb_256_0.5.pkl',
-        'test_neg_path': '../../../datasets/amazon_book_movie_music/book/test.txt',
-        # 'u_neg_path':'../datasets/amazon_book_movie_music/book/user_neg_items_doc_emb_sbert_0.5.pkl'
-    },
-    'amazon_book_movie_music_movie': {
-        'rating_path': '/data/lwang9/CDR_data_process/data_process_FedPCL_MDR_imp_common_user/datasets/amazon_book_movie_music/movie/movie_inter.csv',
-        'user_rev_emb_path': '/data/lwang9/CDR_data_process/data_process_FedPCL_MDR_imp_common_user/datasets/amazon_book_movie_music/movie/movie_user_doc_emb_256.npy',
-        'item_rev_emb_path': '/data/lwang9/CDR_data_process/data_process_FedPCL_MDR_imp_common_user/datasets/amazon_book_movie_music/movie/movie_item_doc_emb_256.npy',
-        'overlap_user_num': 9126,
-        'train_path': '../../../datasets/amazon_book_movie_music/movie/train.csv',
-        'test_path': '../../../datasets/amazon_book_movie_music/movie/test.csv',
-        'potential_pos_path': '../../../datasets/amazon_book_movie_music/movie/user_pos_items_doc_emb_256_0.5.pkl',
-        'test_neg_path': '../../../datasets/amazon_book_movie_music/movie/test.txt',
-        # 'u_neg_path':'../datasets/amazon_book_movie_music/book/user_neg_items_doc_emb_sbert_0.5.pkl'
-    },
-    'amazon_book_movie_music_music': {
-        'rating_path': '/data/lwang9/CDR_data_process/data_process_FedPCL_MDR_imp_common_user/datasets/amazon_book_movie_music/music/music_inter.csv',
-        'user_rev_emb_path': '/data/lwang9/CDR_data_process/data_process_FedPCL_MDR_imp_common_user/datasets/amazon_book_movie_music/music/music_user_doc_emb_256.npy',
-        'item_rev_emb_path': '/data/lwang9/CDR_data_process/data_process_FedPCL_MDR_imp_common_user/datasets/amazon_book_movie_music/music/music_item_doc_emb_256.npy',
-        'overlap_user_num': 9126,
-        'train_path': '../../../datasets/amazon_book_movie_music/music/train.csv',
-        'test_path': '../../../datasets/amazon_book_movie_music/music/test.csv',
-        'potential_pos_path': '../../../datasets/amazon_book_movie_music/music/user_pos_items_doc_emb_256_0.5.pkl',
-        'test_neg_path': '../../../datasets/amazon_book_movie_music/music/test.txt',
-        # 'u_neg_path':'../datasets/amazon_book_movie_music/book/user_neg_items_doc_emb_sbert_0.5.pkl'
     },
 
     'douban_book_music_book':{
@@ -76,7 +46,8 @@ data_params = {
         'train_path': '../../../../datasets/douban_book_music/book/train.csv',
         'test_path': '../../../../datasets/douban_book_music/book/test.csv',
         'potential_pos_path':'../../../../datasets/douban_book_music/book/user_pos_items_doc_emb_sbert_0.5.pkl',
-        'test_neg_path':'../../../../datasets/douban_book_music/book/test.txt',
+        'test_neg_path':'../../../../datasets/douban_book_music/book/test_1.txt',
+        'dislike_path':'../../../../datasets/douban_book_music/book/user_dislike_items.pkl',
         'overlap_user_num': 909,
         'u_neg_path':'../../../../datasets/douban_book_music/book/user_neg_items_doc_emb_sbert_0.5.pkl'
     },
@@ -88,22 +59,9 @@ data_params = {
         'train_path': '../../../../datasets/douban_book_music/music/train.csv',
         'test_path': '../../../../datasets/douban_book_music/music/test.csv',
         'potential_pos_path':'../../../../datasets/douban_book_music/music/user_pos_items_doc_emb_sbert_0.5.pkl',
-        'test_neg_path':'../../../../datasets/douban_book_music/music/test.txt',
+        'dislike_path':'../../../../datasets/douban_book_music/music/user_dislike_items.pkl',
+        'test_neg_path':'../../../../datasets/douban_book_music/music/test_1.txt',
         'u_neg_path':'../../../../datasets/douban_book_music/music/user_neg_items_doc_emb_sbert_0.5.pkl'
-    },
-    'amazon_cloth_sport_cloth':{
-        'rating_path': '/data/lwang9/CDR_data_process/amazon_data_process_FedPCL_MDR/datasets/amazon_cloth_sport/amazon_cloth/cloth_data.csv',
-        'train_path':'datasets/amazon/amazon_cloth_sport/amazon_cloth/train.csv',
-        'test_path':'datasets/amazon/amazon_cloth_sport/amazon_cloth/test.csv',
-        'test_neg_path':'datasets/amazon/amazon_cloth_sport/amazon_cloth/test.txt',
-        'overlap_user_num': 1284
-    },
-    'amazon_cloth_sport_sport':{
-        'rating_path': '/data/lwang9/CDR_data_process/amazon_data_process_FedPCL_MDR/datasets/amazon_cloth_sport/amazon_sport/sport_data.csv',
-        'overlap_user_num': 1284,
-        'train_path':'datasets/amazon/amazon_cloth_sport/amazon_sport/train.csv',
-        'test_path':'datasets/amazon/amazon_cloth_sport/amazon_sport/test.csv',
-        'test_neg_path':'datasets/amazon/amazon_cloth_sport/amazon_sport/test.txt',
     },
     'amazon_phone_sport_phone':{
         'rating_path': '/data/lwang9/CDR_data_process/data_process_FedPCL_MDR_imp_common_user/datasets/amazon_phone_sport/phone/phone_inter.csv',
@@ -115,8 +73,9 @@ data_params = {
         # 'item_rev_emb_path':'/data/lwang9/CDR_data_process/amazon_data_process_P2M2_CDR/datasets/phone_sport/phone/phone_item_review_feat.npy',
         'train_path': '../../../datasets/amazon_phone_sport/phone/train.csv',
         'test_path': '../../../datasets/amazon_phone_sport/phone/test.csv',
-        'test_neg_path': '../../../datasets/amazon_phone_sport/phone/test.txt',
+        'test_neg_path': '../../../datasets/amazon_phone_sport/phone/test_1.txt',
         'potential_pos_path':'../../../datasets/amazon_phone_sport/phone/user_pos_items_doc_emb_256_0.5.pkl',
+        'dislike_path':'../../../../datasets/amazon_phone_sport/phone/user_dislike_items.pkl',
         # 'train_path': '../datasets/phone_sport/phone/train_new.csv',
         # 'test_path': '../datasets/phone_sport/phone/test_new.csv',
         # 'test_neg_path': '../datasets/amazon_phone_sport/phone/test_new_doc_emb_256_0.6.txt',
@@ -132,67 +91,15 @@ data_params = {
         # 'item_rev_emb_path': '/data/lwang9/CDR_data_process/amazon_data_process_P2M2_CDR/datasets/phone_sport/sport/sport_item_review_feat.npy',
         'train_path': '../../../datasets/amazon_phone_sport/sport/train.csv',
         'test_path': '../../../datasets/amazon_phone_sport/sport/test.csv',
-        'test_neg_path': '../../../datasets/amazon_phone_sport/sport/test.txt',
+        'test_neg_path': '../../../datasets/amazon_phone_sport/sport/test_1.txt',
         'potential_pos_path':'../../../datasets/amazon_phone_sport/sport/user_pos_items_doc_emb_256_0.5.pkl',
+        'dislike_path':'../../../../datasets/amazon_phone_sport/sport/user_dislike_items.pkl',
         # 'train_path': '../datasets/phone_sport/sport/train_new.csv',
         # 'test_path': '../datasets/phone_sport/sport/test_new.csv',
         # 'test_neg_path': '../datasets/amazon_phone_sport/sport/test_new_doc_emb_256_0.6.txt',
         'u_neg_path':'../../../datasets/amazon_phone_sport/sport/user_neg_items_doc_emb_256_0.6.pkl'
     },
-
-    'amazon_elec_cloth_phone_elec':{
-        'rating_path': '/data/lwang9/CDR_data_process/data_process_FedPCL_MDR_imp_common_user/datasets/amazon_elec_cloth_phone/elec/elec_inter.csv',
-        # 'rating_path': '../datasets/phone_sport/phone/phone_inter_new.csv',
-        'overlap_user_num': 4188,
-        'user_rev_emb_path':'/data/lwang9/CDR_data_process/data_process_FedPCL_MDR_imp_common_user/datasets/amazon_elec_cloth_phone/elec/elec_user_doc_emb_256.npy',
-        'item_rev_emb_path':'/data/lwang9/CDR_data_process/data_process_FedPCL_MDR_imp_common_user/datasets/amazon_elec_cloth_phone/elec/elec_item_doc_emb_256.npy',
-        # 'user_rev_emb_path':'/data/lwang9/CDR_data_process/amazon_data_process_P2M2_CDR/datasets/phone_sport/phone/phone_review_feat.npy',
-        # 'item_rev_emb_path':'/data/lwang9/CDR_data_process/amazon_data_process_P2M2_CDR/datasets/phone_sport/phone/phone_item_review_feat.npy',
-        'train_path': '../../../datasets/amazon_elec_cloth_phone/elec/train.csv',
-        'test_path': '../../../datasets/amazon_elec_cloth_phone/elec/test.csv',
-        'test_neg_path': '../../../datasets/amazon_elec_cloth_phone/elec/test.txt',
-        'potential_pos_path':'../../../datasets/amazon_elec_cloth_phone/elec/user_pos_items_doc_emb_256_0.5.pkl',
-        # 'train_path': '../datasets/phone_sport/phone/train_new.csv',
-        # 'test_path': '../datasets/phone_sport/phone/test_new.csv',
-        # 'test_neg_path': '../datasets/amazon_phone_sport/phone/test_new_doc_emb_256_0.6.txt',
-        # 'u_neg_path':'../datasets/amazon_phone_sport/phone/user_neg_items_doc_emb_256_0.6.pkl'
-    },
-    'amazon_elec_cloth_phone_cloth':{
-        'rating_path': '/data/lwang9/CDR_data_process/data_process_FedPCL_MDR_imp_common_user/datasets/amazon_elec_cloth_phone/cloth/cloth_inter.csv',
-        # 'rating_path': '../datasets/phone_sport/sport/sport_inter_new.csv',
-        'overlap_user_num': 4188,
-        'user_rev_emb_path':'/data/lwang9/CDR_data_process/data_process_FedPCL_MDR_imp_common_user/datasets/amazon_elec_cloth_phone/cloth/cloth_user_doc_emb_256.npy',
-        'item_rev_emb_path':'/data/lwang9/CDR_data_process/data_process_FedPCL_MDR_imp_common_user/datasets/amazon_elec_cloth_phone/cloth/cloth_item_doc_emb_256.npy',
-        # 'user_rev_emb_path': '/data/lwang9/CDR_data_process/amazon_data_process_P2M2_CDR/datasets/phone_sport/sport/sport_review_feat.npy',
-        # 'item_rev_emb_path': '/data/lwang9/CDR_data_process/amazon_data_process_P2M2_CDR/datasets/phone_sport/sport/sport_item_review_feat.npy',
-        'train_path': '../../../datasets/amazon_elec_cloth_phone/cloth/train.csv',
-        'test_path': '../../../datasets/amazon_elec_cloth_phone/cloth/test.csv',
-        'test_neg_path': '../../../datasets/amazon_elec_cloth_phone/cloth/test.txt',
-        'potential_pos_path':'../../../datasets/amazon_elec_cloth_phone/cloth/user_pos_items_doc_emb_256_0.5.pkl',
-        # 'train_path': '../datasets/phone_sport/sport/train_new.csv',
-        # 'test_path': '../datasets/phone_sport/sport/test_new.csv',
-        # 'test_neg_path': '../datasets/amazon_phone_sport/sport/test_new_doc_emb_256_0.6.txt',
-        # 'u_neg_path':'../datasets/amazon_phone_sport/sport/user_neg_items_doc_emb_256_0.6.pkl'
-    },
-    'amazon_elec_cloth_phone_phone':{
-        'rating_path': '/data/lwang9/CDR_data_process/data_process_FedPCL_MDR_imp_common_user/datasets/amazon_elec_cloth_phone/phone/phone_inter.csv',
-        # 'rating_path': '../datasets/phone_sport/sport/sport_inter_new.csv',
-        'overlap_user_num': 4188,
-        'user_rev_emb_path':'/data/lwang9/CDR_data_process/data_process_FedPCL_MDR_imp_common_user/datasets/amazon_elec_cloth_phone/phone/phone_user_doc_emb_256.npy',
-        'item_rev_emb_path':'/data/lwang9/CDR_data_process/data_process_FedPCL_MDR_imp_common_user/datasets/amazon_elec_cloth_phone/phone/phone_item_doc_emb_256.npy',
-        # 'user_rev_emb_path': '/data/lwang9/CDR_data_process/amazon_data_process_P2M2_CDR/datasets/phone_sport/sport/sport_review_feat.npy',
-        # 'item_rev_emb_path': '/data/lwang9/CDR_data_process/amazon_data_process_P2M2_CDR/datasets/phone_sport/sport/sport_item_review_feat.npy',
-        'train_path': '../../../datasets/amazon_elec_cloth_phone/phone/train.csv',
-        'test_path': '../../../datasets/amazon_elec_cloth_phone/phone/test.csv',
-        'test_neg_path': '../../../datasets/amazon_elec_cloth_phone/phone/test.txt',
-        'potential_pos_path':'../../../datasets/amazon_elec_cloth_phone/phone/user_pos_items_doc_emb_256_0.5.pkl',
-        # 'train_path': '../datasets/phone_sport/sport/train_new.csv',
-        # 'test_path': '../datasets/phone_sport/sport/test_new.csv',
-        # 'test_neg_path': '../datasets/amazon_phone_sport/sport/test_new_doc_emb_256_0.6.txt',
-        # 'u_neg_path':'../datasets/amazon_phone_sport/sport/user_neg_items_doc_emb_256_0.6.pkl'
-    },
 }
-
 model_params = {
     'douban_book_movie_music_book':{
         'user_num' : 901,

@@ -12,7 +12,7 @@ def parse():
     parser.add_argument('--test_batch_size', type=int, default=1000, metavar='N', help='input batch size for testing')
     parser.add_argument('--epochs', type=int, default=1, metavar='N', help='number of epochs to train')
     parser.add_argument('--rounds', type=int, default=100, metavar='N', help='number of rounds for the communication between the server and clients')
-    parser.add_argument('--alpha', type=float, default=0.05, metavar='N',
+    parser.add_argument('--alpha', type=float, default=0.01, metavar='N',
                         help='inter cl loss')
     parser.add_argument('--beta', type=float, default=0.4, metavar='N',
                         help='beta distribution')
@@ -20,7 +20,7 @@ def parse():
                         help='intral cl loss')
     # parser.add_argument('--lap_noise', type=float, default=0.01, metavar='N',
     #                     help='the laplace noise')
-    parser.add_argument('--lap_noise', type=float, default=0.3, metavar='N',
+    parser.add_argument('--lap_noise', type=float, default=0.2, metavar='N',
                         help='the laplace noise, eta')
     parser.add_argument('--C', type=float, default=0.1, metavar='N',
                         help='the clipping threshold of sensitivity')
@@ -29,7 +29,7 @@ def parse():
     parser.add_argument('--pos_neg_num', type=int, default=4, metavar='N',
                         help='the number of potential positive sample')
     parser.add_argument('--top_k', type=int, default=10, metavar='N', help='the length of recommendation lists')
-    parser.add_argument('--client_num', type=int, default=2, metavar='N', help='the number of clients/domains')
+    parser.add_argument('--client_num', type=int, default=3, metavar='N', help='the number of clients/domains')
     # parser.add_argument('--client_names',type=list,default = ['amazon_phone','amazon_sport'],metavar='N', help='the clients')
     # parser.add_argument('--client_names', type=list, default=['amazon_elec_cloth_phone_elec', 'amazon_elec_cloth_phone_phone'],
     #                     metavar='N', help='the clients')
@@ -39,16 +39,16 @@ def parse():
     # parser.add_argument('--client_names', type=list,
     #                     default=['douban_book_movie_book', 'douban_book_movie_movie'],
     #                     metavar='N', help='the clients')
-    # parser.add_argument('--client_names', type=list,
-    #             default=['douban_book_movie_music_book', 'douban_book_movie_music_movie','douban_book_movie_music_music'],
-    #                     metavar='N', help='the clients')
+    parser.add_argument('--client_names', type=list,
+                default=['douban_book_movie_music_book', 'douban_book_movie_music_movie','douban_book_movie_music_music'],
+                        metavar='N', help='the clients')
     # parser.add_argument('--client_names', type=list,
     #                     default=['amazon_book_movie_music_book', 'amazon_book_movie_music_movie',
     #                              'amazon_book_movie_music_music'],
     #                     metavar='N', help='the clients')
-    parser.add_argument('--client_names', type=list,
-                        default=['amazon_phone_sport_phone', 'amazon_phone_sport_sport'],
-                        metavar='N', help='the clients')
+    # parser.add_argument('--client_names', type=list,
+    #                     default=['amazon_phone_sport_phone', 'amazon_phone_sport_sport'],
+    #                     metavar='N', help='the clients')
     # parser.add_argument('--client_names', type=list,
     #                     default=['amazon_elec_cloth_phone_elec', 'amazon_elec_cloth_phone_cloth','amazon_elec_cloth_phone_phone'],
     #                     metavar='N', help='the clients')

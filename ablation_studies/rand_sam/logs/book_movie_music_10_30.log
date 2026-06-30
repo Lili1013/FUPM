@@ -1,0 +1,15 @@
+2024-10-30 08:55:01.157 | INFO     | __main__:<module>:184 - parameter settings: batch_size:128,lr:0.001,embed_id_dim:256,alpha:0.01,gamma:0.2, beta:0.4,,noise:0.2,global_proto_agg_way:weight, client_num:3,client_names:['douban_book_movie_music_book', 'douban_book_movie_music_movie', 'douban_book_movie_music_music'],top_k:10,local epochs:1
+2024-10-30 08:55:01.668 | INFO     | __main__:<module>:226 - initialize local data and local model:['douban_book_movie_music_book', 'douban_book_movie_music_movie', 'douban_book_movie_music_music']
+2024-10-30 08:55:01.668 | INFO     | utils.load_data:__init__:46 - load datasets
+2024-10-30 08:55:14.089 | INFO     | utils.load_data:__init__:49 - calculate user neighbors
+2024-10-30 08:55:14.176 | INFO     | utils.load_data:__init__:51 - create data loader
+2024-10-30 08:55:14.216 | INFO     | utils.load_data:__init__:54 - read test samples
+2024-10-30 08:56:18.490 | INFO     | utils.load_data:__init__:46 - load datasets
+2024-10-30 08:59:27.179 | INFO     | utils.load_data:__init__:49 - calculate user neighbors
+2024-10-30 08:59:28.692 | INFO     | utils.load_data:__init__:51 - create data loader
+2024-10-30 08:59:28.810 | INFO     | utils.load_data:__init__:54 - read test samples
+2024-10-30 08:59:48.660 | INFO     | utils.load_data:__init__:46 - load datasets
+2024-10-30 09:00:11.882 | INFO     | utils.load_data:__init__:49 - calculate user neighbors
+2024-10-30 09:00:11.959 | INFO     | utils.load_data:__init__:51 - create data loader
+2024-10-30 09:00:11.967 | INFO     | utils.load_data:__init__:54 - read test samples
+2024-10-30 09:02:50.811 | INFO     | __main__:<module>:315 - round:0, client:0, loss:425.02880, ce loss:0.68409, intra cl loss: 2056.29900,proto loss: 1308.49029, hr_5:0.16204, ndcg_5:0.11302,mrr_5:0.09697,hr_10:0.25638, ndcg_10:0.14324,mrr_10:0.10927

@@ -12,7 +12,7 @@ def parse():
     parser.add_argument('--test_batch_size', type=int, default=1000, metavar='N', help='input batch size for testing')
     parser.add_argument('--epochs', type=int, default=1, metavar='N', help='number of epochs to train')
     parser.add_argument('--rounds', type=int, default=100, metavar='N', help='number of rounds for the communication between the server and clients')
-    parser.add_argument('--alpha', type=float, default=0.05, metavar='N',
+    parser.add_argument('--alpha', type=float, default=0.01, metavar='N',
                         help='inter cl loss')
     parser.add_argument('--beta', type=float, default=0.4, metavar='N',
                         help='beta distribution')
@@ -20,7 +20,7 @@ def parse():
                         help='intral cl loss')
     # parser.add_argument('--lap_noise', type=float, default=0.01, metavar='N',
     #                     help='the laplace noise')
-    parser.add_argument('--lap_noise', type=float, default=0.3, metavar='N',
+    parser.add_argument('--lap_noise', type=float, default=0.2, metavar='N',
                         help='the laplace noise, eta')
     parser.add_argument('--C', type=float, default=0.1, metavar='N',
                         help='the clipping threshold of sensitivity')
